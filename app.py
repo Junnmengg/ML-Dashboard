@@ -107,7 +107,7 @@ def dbscan_clustering(X, eps, min_samples):
     dbscan = DBSCAN(eps=eps, min_samples=min_samples)
     return dbscan.fit_predict(X)
 
-def spectral_clustering_with_pca(X, n_clusters, n_components, affinity):
+def spectral_clustering(X, n_clusters, n_components, affinity):
     pca = PCA(n_components=n_components)
     X_pca = pca.fit_transform(X)
     model = SpectralClustering(n_clusters=n_clusters, assign_labels="discretize", random_state=0, affinity=affinity)
