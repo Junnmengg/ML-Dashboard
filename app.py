@@ -105,9 +105,8 @@ if uploaded_file:
         'NumStorePurchases', 'NumWebVisitsMonth'
     ]
 
-    # Display the available features from the dataset
     st.write("Data Overviews:")
-    st.write(marketing_campaign_data.columns.tolist())  # Display all columns in the dataset
+    st.write(selected_vars.head())
 
     # Ensure the dataset contains the pre-selected features
     missing_features = [var for var in selected_vars if var not in marketing_campaign_data.columns]
