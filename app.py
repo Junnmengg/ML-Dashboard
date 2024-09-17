@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.express as px
+from plotly.graph_objs import Scatter3d, Layout
 from sklearn.mixture import GaussianMixture
 from sklearn.decomposition import PCA
 from sklearn.cluster import DBSCAN, AgglomerativeClustering
@@ -48,16 +49,21 @@ def explore_data(data):
         fig = px.scatter_matrix(data[columns], title="Scatter Matrix Plot")
         st.plotly_chart(fig)
 
-# Function to plot clusters
-def plot_clusters(X, labels, title):
-    fig = px.scatter(x=X[:, 0], y=X[:, 1], color=labels.astype(str), title=title, labels={'x': 'Feature 1', 'y': 'Feature 2'})
+# Function to plot 3D clusters
+def plot_3d_clusters(X, labels, title):
+    fig = px.scatter_3d(
+        x=X[:, 0], y=X[:, 1], z=X[:, 2], 
+        color=labels.astype(str),
+        title=title,
+        labels={'x': 'Component 1', 'y': 'Component 2', 'z': 'Component 3'}
+    )
     st.plotly_chart(fig)
 
 # Function to apply PCA after clustering
 def apply_pca_after_clustering(data, labels, n_components=3):
     pca = PCA(n_components=n_components)
     X_pca = pca.fit_transform(data)
-    plot_clusters(X_pca, labels, f"PCA Visualization with {n_components} Components and Clusters")
+    plot_3d_clusters(X_pca, labels, f"PCA 3D Visualization with {n_components} Components and Clusters")
 
 # Function to evaluate clustering performance
 def evaluate_clustering(X, labels):
@@ -140,6 +146,6 @@ if uploaded_file:
     else:
         st.write("Clustering could not be evaluated (e.g., not enough clusters or only noise).")
 
-    # Apply PCA after clustering and plot
-    st.subheader(f'PCA Visualization with Clustering')
+    # Apply PCA after clustering and plot 3D
+    st.subheader(f'PCA 3D Visualization with Clustering')
     apply_pca_after_clustering(X_marketing_campaign, labels)
