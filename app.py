@@ -49,13 +49,23 @@ def explore_data(data):
         fig = px.scatter_matrix(data[columns], title="Scatter Matrix Plot")
         st.plotly_chart(fig)
 
-# Function to plot 3D clusters
+# Function to plot 3D clusters with white background
 def plot_3d_clusters(X, labels, title):
     fig = px.scatter_3d(
         x=X[:, 0], y=X[:, 1], z=X[:, 2], 
         color=labels.astype(str),
         title=title,
         labels={'x': 'Component 1', 'y': 'Component 2', 'z': 'Component 3'}
+    )
+    # Set the layout to have a white background
+    fig.update_layout(
+        scene=dict(
+            xaxis=dict(backgroundcolor="white"),
+            yaxis=dict(backgroundcolor="white"),
+            zaxis=dict(backgroundcolor="white")
+        ),
+        paper_bgcolor="white",  # Set the paper (outer) background to white
+        plot_bgcolor="white"    # Set the plot (inner) background to white
     )
     st.plotly_chart(fig)
 
