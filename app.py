@@ -88,7 +88,7 @@ def apply_pca_after_clustering(data, labels, algorithm, n_components=3):
 
 # Streamlit App Flow
 st.title('Interactive Clustering Dashboard')
-st.sidebar.title('Options')
+st.sidebar.title('Menu Options')
 
 # Step 1: Dataset upload
 uploaded_file = st.sidebar.file_uploader("Upload your dataset", type=["csv", "xlsx"])
