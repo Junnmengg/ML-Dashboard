@@ -88,7 +88,7 @@ def apply_pca_after_clustering(data, labels, algorithm, n_components=3):
 
 # Streamlit App Flow
 st.title('Interactive Clustering Dashboard')
-st.sidebar.title('Menu Options')
+st.sidebar.title('Options')
 
 # Step 1: Dataset upload
 uploaded_file = st.sidebar.file_uploader("Upload your dataset", type=["csv", "xlsx"])
@@ -126,16 +126,25 @@ if uploaded_file:
         n_clusters = st.sidebar.slider("Number of Clusters", 2, 10, 3)
         n_pca_components = st.sidebar.slider("Number of PCA Components", 2, 3, 2)
 
+        # Show details of the current clustering settings:
+        st.write(f"**Chosen Parameters:**")
+        st.write(f"- **Number of Clusters:** {n_clusters}")
+        st.write(f"- **Number of PCA Components:** {n_pca_components}")
+
         # Algorithm-specific parameters
         if algorithm == "DBSCAN":
             eps = st.sidebar.slider("Epsilon (eps)", 0.1, 2.0, 0.5)
             min_samples = st.sidebar.slider("Min Samples", 1, 20, 5)
+            st.write(f"- **DBSCAN Parameters:** Epsilon = {eps}, Min Samples = {min_samples}")
         elif algorithm == "Gaussian Mixture Model (GMM)":
             covariance_type = st.sidebar.selectbox("Covariance Type", ["full", "tied", "diag", "spherical"])
+            st.write(f"- **GMM Parameters:** Covariance Type = {covariance_type}")
         elif algorithm == "Hierarchical Clustering":
             linkage_method = st.sidebar.selectbox("Linkage Method", ["ward", "complete", "average", "single"])
+            st.write(f"- **Hierarchical Clustering Parameters:** Linkage Method = {linkage_method}")
         elif algorithm == "Spectral Clustering":
             affinity = st.sidebar.selectbox("Affinity", ["nearest_neighbors", "rbf"])
+            st.write(f"- **Spectral Clustering Parameters:** Affinity = {affinity}")
 
         # Step 5: Run the clustering algorithm
         st.write(f"Processing data with {algorithm}...")
