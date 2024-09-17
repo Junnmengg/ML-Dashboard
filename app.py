@@ -11,6 +11,29 @@ from sklearn.metrics import silhouette_score, davies_bouldin_score, calinski_har
 from scipy.cluster.hierarchy import dendrogram, linkage
 import matplotlib.pyplot as plt
 
+# Function to define clustering models
+def gmm_clustering(X, n_clusters, covariance_type):
+    gmm = GaussianMixture(n_components=n_clusters, covariance_type=covariance_type, random_state=0)
+    labels = gmm.fit_predict(X)
+    bic = gmm.bic(X)
+    aic = gmm.aic(X)
+    return labels, bic, aic
+
+def hierarchical_clustering(X, n_clusters, linkage_method):
+    model = AgglomerativeClustering(n_clusters=n_clusters, linkage=linkage_method)
+    labels = model.fit_predict(X)
+    return labels
+
+def dbscan_clustering(X, eps, min_samples):
+    dbscan = DBSCAN(eps=eps, min_samples=min_samples)
+    return dbscan.fit_predict(X)
+
+def spectral_clustering_with_pca(X, n_clusters, n_components, affinity):
+    pca = PCA(n_components=n_components)
+    X_pca = pca.fit_transform(X)
+    model = SpectralClustering(n_clusters=n_clusters, assign_labels="discretize", random_state=0, affinity=affinity)
+    return model.fit_predict(X_pca)
+
 # Set page title and layout
 st.title('Interactive Clustering Dashboard')
 st.sidebar.title('Options')
@@ -89,26 +112,3 @@ if uploaded_file:
     # Apply PCA after clustering and plot (3D for GMM, 2D for others)
     st.subheader(f'PCA Visualization with Clustering')
     apply_pca_after_clustering(X_marketing_campaign, labels, algorithm, n_pca_components)
-
-# Define clustering models
-def gmm_clustering(X, n_clusters, covariance_type):
-    gmm = GaussianMixture(n_components=n_clusters, covariance_type=covariance_type, random_state=0)
-    labels = gmm.fit_predict(X)
-    bic = gmm.bic(X)
-    aic = gmm.aic(X)
-    return labels, bic, aic
-
-def hierarchical_clustering(X, n_clusters, linkage_method):
-    model = AgglomerativeClustering(n_clusters=n_clusters, linkage=linkage_method)
-    labels = model.fit_predict(X)
-    return labels
-
-def dbscan_clustering(X, eps, min_samples):
-    dbscan = DBSCAN(eps=eps, min_samples=min_samples)
-    return dbscan.fit_predict(X)
-
-def spectral_clustering(X, n_clusters, n_components, affinity):
-    pca = PCA(n_components=n_components)
-    X_pca = pca.fit_transform(X)
-    model = SpectralClustering(n_clusters=n_clusters, assign_labels="discretize", random_state=0, affinity=affinity)
-    return model.fit_predict(X_pca)
