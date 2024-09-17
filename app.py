@@ -15,6 +15,37 @@ import matplotlib.pyplot as plt
 st.title('Interactive Clustering Dashboard')
 st.sidebar.title('Options')
 
+# Function to inject custom CSS for background color
+def set_background_color(color):
+    if color == 'Black':
+        background_color = "#000000"  # Black
+        text_color = "#FFFFFF"  # White
+    else:
+        background_color = "#FFFFFF"  # White
+        text_color = "#000000"  # Black
+    
+    # Inject CSS to change the background and text colors
+    st.markdown(
+        f"""
+        <style>
+        .stApp {{
+            background-color: {background_color};
+            color: {text_color};
+        }}
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+# Sidebar option to select background color
+background_color = st.sidebar.selectbox(
+    "Choose Background Color",
+    ["White", "Black"]
+)
+
+# Apply the selected background color
+set_background_color(background_color)
+
 # Define the selected variables for clustering
 selected_vars = [
     'Annual_Income', 'Kidhome', 'Teenhome', 'Recency',
