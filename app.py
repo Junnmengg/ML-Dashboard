@@ -97,26 +97,23 @@ if uploaded_file:
     # Step 2: Load and validate the dataset
     marketing_campaign_data = pd.read_csv(uploaded_file) if uploaded_file.name.endswith('csv') else pd.read_excel(uploaded_file)
 
-    # Ensure the dataset has numeric columns
-    numeric_columns = marketing_campaign_data.select_dtypes(include=[np.number]).columns.tolist()
-    if len(numeric_columns) < 2:
-        st.error("The dataset must have at least two numeric columns for clustering.")
+    # Pre-selected features for clustering
+    selected_vars = [
+        'Annual_Income', 'Kidhome', 'Teenhome', 'Recency',
+        'Wines', 'Fruits', 'Meat', 'Fish', 'Sweets', 'Gold',
+        'NumDealsPurchases', 'NumWebPurchases', 'NumCatalogPurchases', 
+        'NumStorePurchases', 'NumWebVisitsMonth'
+    ]
+
+    # Ensure the dataset contains the pre-selected features
+    missing_features = [var for var in selected_vars if var not in marketing_campaign_data.columns]
+    if missing_features:
+        st.error(f"The following required features are missing from the dataset: {', '.join(missing_features)}")
     else:
-        # Step 3: Show dataset preview
-        st.write("Data Overview:")
-        st.write(marketing_campaign_data.head())
-
-        # Step 4: Select variables for clustering
-        selected_vars = st.multiselect(
-            "Select the features for clustering", 
-            numeric_columns,
-            default=numeric_columns[:5]  # Automatically select the first 5 numeric columns
-        )
-
-        # Step 5: Drop missing values
+        # Step 3: Drop missing values for the selected features
         X_marketing_campaign = marketing_campaign_data[selected_vars].dropna()
 
-        # Step 6: Allow user to choose clustering algorithm and parameters
+        # Step 4: Allow user to choose clustering algorithm and parameters
         algorithm = st.sidebar.selectbox(
             "Select Clustering Algorithm",
             ["Gaussian Mixture Model (GMM)", "Hierarchical Clustering", "DBSCAN", "Spectral Clustering"]
@@ -137,7 +134,7 @@ if uploaded_file:
         elif algorithm == "Spectral Clustering":
             affinity = st.sidebar.selectbox("Affinity", ["nearest_neighbors", "rbf"])
 
-        # Step 7: Run the clustering algorithm
+        # Step 5: Run the clustering algorithm
         st.write(f"Processing data with {algorithm}...")
 
         if algorithm == "Gaussian Mixture Model (GMM)":
@@ -155,7 +152,7 @@ if uploaded_file:
         elif algorithm == "Spectral Clustering":
             labels = spectral_clustering_with_pca(X_marketing_campaign, n_clusters, n_pca_components, affinity)
 
-        # Step 8: Evaluate clustering performance
+        # Step 6: Evaluate clustering performance
         silhouette, db, ch = evaluate_clustering(X_marketing_campaign, labels)
 
         if silhouette is not None:
@@ -163,7 +160,7 @@ if uploaded_file:
         else:
             st.write("Clustering could not be evaluated (e.g., not enough clusters or only noise).")
 
-        # Step 9: PCA Visualization
+        # Step 7: PCA Visualization
         st.subheader(f'PCA Visualization with Clustering')
         apply_pca_after_clustering(X_marketing_campaign, labels, algorithm, n_pca_components)
 
