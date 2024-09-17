@@ -11,7 +11,7 @@ from sklearn.metrics import silhouette_score, davies_bouldin_score, calinski_har
 from scipy.cluster.hierarchy import dendrogram, linkage
 import matplotlib.pyplot as plt
 
-# Function to define clustering models (same as before)
+# Function to define clustering models
 def gmm_clustering(X, n_clusters, covariance_type):
     gmm = GaussianMixture(n_components=n_clusters, covariance_type=covariance_type, random_state=0)
     labels = gmm.fit_predict(X)
@@ -34,14 +34,16 @@ def spectral_clustering_with_pca(X, n_clusters, n_components, affinity):
     model = SpectralClustering(n_clusters=n_clusters, assign_labels="discretize", random_state=0, affinity=affinity)
     return model.fit_predict(X_pca)
 
-# Function to evaluate clustering performance (same as before)
+# Function to evaluate clustering performance
 def evaluate_clustering(X, labels):
     unique_labels = np.unique(labels)
-
+    
+    # Handle case of single or no cluster
     if len(unique_labels) < 2:
         st.write("Not enough clusters to compute performance metrics.")
         return None, None, None
 
+    # Compute metrics for non-noise points in DBSCAN
     if -1 in unique_labels:
         mask = labels != -1
         silhouette = silhouette_score(X[mask], labels[mask])
@@ -54,7 +56,7 @@ def evaluate_clustering(X, labels):
 
     return silhouette, davies_bouldin, calinski_harabasz
 
-# Function to plot clusters (same as before)
+# Function to plot clusters
 def plot_3d_clusters(X, labels, title):
     fig = px.scatter_3d(
         x=X[:, 0], y=X[:, 1], z=X[:, 2], 
@@ -77,13 +79,14 @@ def apply_pca_after_clustering(data, labels, algorithm, n_components=3):
     pca = PCA(n_components=n_components)
     X_pca = pca.fit_transform(data)
 
-    if algorithm == "Gaussian Mixture Model (GMM)":
+    # Force 3D visualization for GMM
+    if algorithm == "Gaussian Mixture Model (GMM)" and n_components == 3:
         plot_3d_clusters(X_pca, labels, f"PCA 3D Visualization with {n_components} Components and Clusters")
     else:
         plot_2d_clusters(X_pca, labels, f"PCA 2D Visualization with {n_components} Components and Clusters")
 
 
-# Set page title and layout
+# Streamlit App Flow
 st.title('Interactive Clustering Dashboard')
 st.sidebar.title('Options')
 
@@ -91,77 +94,78 @@ st.sidebar.title('Options')
 uploaded_file = st.sidebar.file_uploader("Upload your dataset", type=["csv", "xlsx"])
 
 if uploaded_file:
-    # Step 2: Load the dataset
+    # Step 2: Load and validate the dataset
     marketing_campaign_data = pd.read_csv(uploaded_file) if uploaded_file.name.endswith('csv') else pd.read_excel(uploaded_file)
 
-    # Step 3: Show the dataset overview
-    st.write("Data Overview:")
-    st.write(marketing_campaign_data.head())
-
-    # Step 4: Select variables for clustering
-    selected_vars = st.multiselect(
-        "Select the features for clustering",
-        marketing_campaign_data.columns,
-        default=[
-            'Annual_Income', 'Kidhome', 'Teenhome', 'Recency',
-            'Wines', 'Fruits', 'Meat', 'Fish', 'Sweets', 'Gold',
-            'NumDealsPurchases', 'NumWebPurchases', 'NumCatalogPurchases', 
-            'NumStorePurchases', 'NumWebVisitsMonth'
-        ]
-    )
-    
-    # Step 5: Drop missing values from selected features
-    X_marketing_campaign = marketing_campaign_data[selected_vars].dropna()
-
-    # Step 6: Allow the user to choose clustering algorithms and parameters
-    algorithm = st.sidebar.selectbox(
-        "Select Clustering Algorithm",
-        ["Gaussian Mixture Model (GMM)", "Hierarchical Clustering", "DBSCAN", "Spectral Clustering"]
-    )
-
-    # Common inputs
-    n_clusters = st.sidebar.slider("Number of Clusters", 2, 10, 3)
-    n_pca_components = st.sidebar.slider("Number of PCA Components", 2, 3, 2)
-
-    # Algorithm-specific parameters
-    if algorithm == "DBSCAN":
-        eps = st.sidebar.slider("Epsilon (eps)", 0.1, 2.0, 0.5)
-        min_samples = st.sidebar.slider("Min Samples", 1, 20, 5)
-    elif algorithm == "Gaussian Mixture Model (GMM)":
-        covariance_type = st.sidebar.selectbox("Covariance Type", ["full", "tied", "diag", "spherical"])
-    elif algorithm == "Hierarchical Clustering":
-        linkage_method = st.sidebar.selectbox("Linkage Method", ["ward", "complete", "average", "single"])
-    elif algorithm == "Spectral Clustering":
-        affinity = st.sidebar.selectbox("Affinity", ["nearest_neighbors", "rbf"])
-
-    # Step 7: Run the clustering algorithm and evaluate results
-    st.write(f"Processing data with {algorithm}...")
-
-    if algorithm == "Gaussian Mixture Model (GMM)":
-        labels, bic, aic = gmm_clustering(X_marketing_campaign, n_clusters, covariance_type)
-        st.write(f"BIC Score: {bic:.4f}, AIC Score: {aic:.4f}")
-    elif algorithm == "Hierarchical Clustering":
-        labels = hierarchical_clustering(X_marketing_campaign, n_clusters, linkage_method)
-        st.subheader("Dendrogram for Hierarchical Clustering")
-        Z = linkage(X_marketing_campaign, method=linkage_method)
-        fig, ax = plt.subplots()
-        dendrogram(Z, ax=ax, truncate_mode='lastp', p=3)
-        st.pyplot(fig)
-    elif algorithm == "DBSCAN":
-        labels = dbscan_clustering(X_marketing_campaign, eps, min_samples)
-    elif algorithm == "Spectral Clustering":
-        labels = spectral_clustering_with_pca(X_marketing_campaign, n_clusters, n_pca_components, affinity)
-
-    # Step 8: Evaluate clustering performance
-    silhouette, db, ch = evaluate_clustering(X_marketing_campaign, labels)
-
-    if silhouette is not None:
-        st.write(f"Silhouette Score: {silhouette:.4f}, Davies-Bouldin Score: {db:.4f}, Calinski-Harabasz Score: {ch:.4f}")
+    # Ensure the dataset has numeric columns
+    numeric_columns = marketing_campaign_data.select_dtypes(include=[np.number]).columns.tolist()
+    if len(numeric_columns) < 2:
+        st.error("The dataset must have at least two numeric columns for clustering.")
     else:
-        st.write("Clustering could not be evaluated (e.g., not enough clusters or only noise).")
+        # Step 3: Show dataset preview
+        st.write("Data Overview:")
+        st.write(marketing_campaign_data.head())
 
-    # Step 9: Visualize PCA results
-    st.subheader(f'PCA Visualization with Clustering')
-    apply_pca_after_clustering(X_marketing_campaign, labels, algorithm, n_pca_components)
+        # Step 4: Select variables for clustering
+        selected_vars = st.multiselect(
+            "Select the features for clustering", 
+            numeric_columns,
+            default=numeric_columns[:5]  # Automatically select the first 5 numeric columns
+        )
+
+        # Step 5: Drop missing values
+        X_marketing_campaign = marketing_campaign_data[selected_vars].dropna()
+
+        # Step 6: Allow user to choose clustering algorithm and parameters
+        algorithm = st.sidebar.selectbox(
+            "Select Clustering Algorithm",
+            ["Gaussian Mixture Model (GMM)", "Hierarchical Clustering", "DBSCAN", "Spectral Clustering"]
+        )
+
+        # Common inputs
+        n_clusters = st.sidebar.slider("Number of Clusters", 2, 10, 3)
+        n_pca_components = st.sidebar.slider("Number of PCA Components", 2, 3, 2)
+
+        # Algorithm-specific parameters
+        if algorithm == "DBSCAN":
+            eps = st.sidebar.slider("Epsilon (eps)", 0.1, 2.0, 0.5)
+            min_samples = st.sidebar.slider("Min Samples", 1, 20, 5)
+        elif algorithm == "Gaussian Mixture Model (GMM)":
+            covariance_type = st.sidebar.selectbox("Covariance Type", ["full", "tied", "diag", "spherical"])
+        elif algorithm == "Hierarchical Clustering":
+            linkage_method = st.sidebar.selectbox("Linkage Method", ["ward", "complete", "average", "single"])
+        elif algorithm == "Spectral Clustering":
+            affinity = st.sidebar.selectbox("Affinity", ["nearest_neighbors", "rbf"])
+
+        # Step 7: Run the clustering algorithm
+        st.write(f"Processing data with {algorithm}...")
+
+        if algorithm == "Gaussian Mixture Model (GMM)":
+            labels, bic, aic = gmm_clustering(X_marketing_campaign, n_clusters, covariance_type)
+            st.write(f"BIC Score: {bic:.4f}, AIC Score: {aic:.4f}")
+        elif algorithm == "Hierarchical Clustering":
+            labels = hierarchical_clustering(X_marketing_campaign, n_clusters, linkage_method)
+            st.subheader("Dendrogram for Hierarchical Clustering")
+            Z = linkage(X_marketing_campaign, method=linkage_method)
+            fig, ax = plt.subplots()
+            dendrogram(Z, ax=ax, truncate_mode='lastp', p=3)
+            st.pyplot(fig)
+        elif algorithm == "DBSCAN":
+            labels = dbscan_clustering(X_marketing_campaign, eps, min_samples)
+        elif algorithm == "Spectral Clustering":
+            labels = spectral_clustering_with_pca(X_marketing_campaign, n_clusters, n_pca_components, affinity)
+
+        # Step 8: Evaluate clustering performance
+        silhouette, db, ch = evaluate_clustering(X_marketing_campaign, labels)
+
+        if silhouette is not None:
+            st.write(f"Silhouette Score: {silhouette:.4f}, Davies-Bouldin Score: {db:.4f}, Calinski-Harabasz Score: {ch:.4f}")
+        else:
+            st.write("Clustering could not be evaluated (e.g., not enough clusters or only noise).")
+
+        # Step 9: PCA Visualization
+        st.subheader(f'PCA Visualization with Clustering')
+        apply_pca_after_clustering(X_marketing_campaign, labels, algorithm, n_pca_components)
+
 else:
     st.info("Please upload a dataset to start.")
