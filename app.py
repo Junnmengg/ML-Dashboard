@@ -79,8 +79,8 @@ def apply_pca_after_clustering(data, labels, algorithm, n_components=3):
     pca = PCA(n_components=n_components)
     X_pca = pca.fit_transform(data)
 
-    # Force 3D visualization for GMM
-    if algorithm == "Gaussian Mixture Model (GMM)" and n_components == 3:
+    # Dynamically apply 3D or 2D plot based on the number of PCA components
+    if n_components == 3:
         plot_3d_clusters(X_pca, labels, f"PCA 3D Visualization with {n_components} Components and Clusters")
     else:
         plot_2d_clusters(X_pca, labels, f"PCA 2D Visualization with {n_components} Components and Clusters")
@@ -88,7 +88,7 @@ def apply_pca_after_clustering(data, labels, algorithm, n_components=3):
 
 # Streamlit App Flow
 st.title('Interactive Clustering Dashboard')
-st.sidebar.title('Options')
+st.sidebar.title('Menu Options')
 
 # Step 1: Dataset upload
 uploaded_file = st.sidebar.file_uploader("Upload your dataset", type=["csv", "xlsx"])
@@ -163,7 +163,7 @@ if uploaded_file:
         else:
             st.write("Clustering could not be evaluated (e.g., not enough clusters or only noise).")
 
-        # Step 7: PCA Visualization
+        # Step 7: PCA Visualization (3D or 2D based on the number of PCA components)
         st.subheader(f'PCA Visualization with Clustering')
         apply_pca_after_clustering(X_marketing_campaign, labels, algorithm, n_pca_components)
 
