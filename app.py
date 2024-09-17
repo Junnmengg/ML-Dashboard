@@ -59,11 +59,25 @@ def plot_3d_clusters(X, labels, title):
     )
     st.plotly_chart(fig)
 
+# Function to plot 2D clusters
+def plot_2d_clusters(X, labels, title):
+    fig = px.scatter(
+        x=X[:, 0], y=X[:, 1], 
+        color=labels.astype(str),
+        title=title,
+        labels={'x': 'Component 1', 'y': 'Component 2'}
+    )
+    st.plotly_chart(fig)
+
 # Function to apply PCA after clustering
-def apply_pca_after_clustering(data, labels, n_components=3):
+def apply_pca_after_clustering(data, labels, algorithm, n_components=3):
     pca = PCA(n_components=n_components)
     X_pca = pca.fit_transform(data)
-    plot_3d_clusters(X_pca, labels, f"PCA 3D Visualization with {n_components} Components and Clusters")
+
+    if algorithm == "Gaussian Mixture Model (GMM)":
+        plot_3d_clusters(X_pca, labels, f"PCA 3D Visualization with {n_components} Components and Clusters")
+    else:
+        plot_2d_clusters(X_pca, labels, f"PCA 2D Visualization with {n_components} Components and Clusters")
 
 # Function to evaluate clustering performance
 def evaluate_clustering(X, labels):
@@ -146,6 +160,6 @@ if uploaded_file:
     else:
         st.write("Clustering could not be evaluated (e.g., not enough clusters or only noise).")
 
-    # Apply PCA after clustering and plot 3D
-    st.subheader(f'PCA 3D Visualization with Clustering')
-    apply_pca_after_clustering(X_marketing_campaign, labels)
+    # Apply PCA after clustering and plot accordingly (3D for GMM, 2D for others)
+    st.subheader(f'PCA Visualization with Clustering')
+    apply_pca_after_clustering(X_marketing_campaign, labels, algorithm)
