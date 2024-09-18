@@ -157,7 +157,7 @@ if uploaded_file:
             st.subheader("Dendrogram for Hierarchical Clustering")
             Z = linkage(X_marketing_campaign, method=linkage_method)
             fig, ax = plt.subplots()
-            dendrogram(Z, ax=ax, truncate_mode='lastp', p=3)
+            dendrogram(Z, ax=ax, truncate_mode='lastp')
             st.pyplot(fig)
         elif algorithm == "DBSCAN":
             labels = dbscan_clustering(X_marketing_campaign, eps, min_samples)
